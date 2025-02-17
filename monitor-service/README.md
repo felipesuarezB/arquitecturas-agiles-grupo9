@@ -1,18 +1,18 @@
-# MISW4202-202511-Grupo09-Experimento1
+# Experimento 1 Arquitectura Ágiles de Software 2025-11 Grupo 09
 
-Proyecto del expermiento 1 de tácticas de arquitectura para mejorar la disponibilidad.
+Experimentos 1 de aplicación de tácticas de arquitectura para mejorar la disponibilidad.
 
 ## Índice
 
 1. [Estructura](#estructura)
 2. [Ejecución](#ejecución)
 3. [Uso](#uso)
-4. [Autor](#autor)
+4. [Autores](#autores)
 
 ## Estructura
 
 ```txt
-monitor/
+monitor-service/
     ├── src/ # Código de la aplicación backend.
     ├── Dockerfile # Archivo para la creación de imagen Docker.
     └── Pipfile # Archivo de declaración de dependencias del proyecto.
