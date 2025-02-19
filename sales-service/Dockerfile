@@ -4,13 +4,8 @@ FROM python:3.12
 # Variables de entorno de la aplicación.
 # ENV ENVIRONMENT=
 # ENV VERSION=
-# ENV DB_USER=
-# ENV DB_PASSWORD=
-# ENV DB_HOST=
-# ENV DB_PORT=
-# ENV DB_NAME=
-# ENV SERVICE_URL=
-# ENV MONITOR_INTERVAL=
+# ENV FAILURE_PROBABILITY=
+# ENV MAX_WAIT_TIME=
 
 # Instalar dependencias de la aplicación.
 COPY Pipfile Pipfile.lock ./
@@ -28,5 +23,5 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /
 USER appuser
 
 # Comando de ejecución aplicación Flask.
-# CMD ["flask", "--app", "app", "run", "-h", "0.0.0.0", "-p", "8080"]
+# CMD ["flask", "--app", "app", "run", "-h", "0.0.0.0", "-p", "8081"]
 CMD flask --app app run -h 0.0.0.0 -p "$PORT"
