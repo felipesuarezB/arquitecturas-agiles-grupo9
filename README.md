@@ -21,7 +21,7 @@ Experimento 1: Aplicación de tácticas de arquitectura para mejorar la disponib
 ```txt
   /
     ├── monitor-service # Implementación componente monitor.
-    ├── sales-service # Implementación microservicio de ventas.
+    ├── sales-service # Implementación componente microservicio de ventas (servicio monitoreado).
     └── Pipfile # Archivo de declaración de dependencias del proyecto.
 ```
 
