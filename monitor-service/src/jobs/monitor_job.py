@@ -16,6 +16,7 @@ def monitor_job():
 
   service_url = os.environ.get('SERVICE_URL', 'http://localhost:8081/health/ping')
   monitor_interval = os.environ.get('MONITOR_INTERVAL', 2)
+  monitor_interval = int(monitor_interval)
   print(f"service_url = {service_url}")
   print(f"monitor_interval = {monitor_interval}")
 
