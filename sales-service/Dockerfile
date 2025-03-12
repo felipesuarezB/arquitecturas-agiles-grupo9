@@ -2,8 +2,13 @@
 FROM python:3.12
 
 # Variables de entorno de la aplicación.
-# ENV ENVIRONMENT=
 # ENV VERSION=
+# ENV ENVIRONMENT=
+# ENV DB_USER=
+# ENV DB_PASSWORD=
+# ENV DB_HOST=memory
+# ENV DB_PORT=
+# ENV DB_NAME=
 # ENV FAILURE_PROBABILITY=
 # ENV MAX_WAIT_TIME=
 

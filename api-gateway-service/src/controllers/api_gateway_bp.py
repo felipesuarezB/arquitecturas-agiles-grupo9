@@ -18,9 +18,9 @@ def auth_generate_token():
 
 
 @api_gateway_bp.route("/ventas/clientes", methods=["GET"])
-def sales_clients():
+def sales_customers():
   auth_header = request.headers['Authorization']
-  res_data, code = api_gateway_app_service.send_request_sales_clients(auth_header)
+  res_data, code = api_gateway_app_service.send_request_sales_customers(auth_header)
   res = jsonify(res_data)
 
   return res, code

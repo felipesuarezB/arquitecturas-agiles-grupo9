@@ -19,7 +19,7 @@ def auth_generate_token(user_creds):
   return res, result.code
 
 
-@auth_bp.route("/validar_token", methods=["POST"])
+@auth_bp.route("/validar_token", methods=["GET"])
 @jwt_required()
 def auth_generate_token():
   jwt_payload = get_jwt()

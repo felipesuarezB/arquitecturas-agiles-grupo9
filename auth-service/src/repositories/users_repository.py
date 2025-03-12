@@ -16,5 +16,5 @@ class UsersRepository:
 
     return user_match and password_match
 
-  def lookup_user_profile_by_username(username: str):
+  def lookup_user_profile_by_username(self, username: str):
     return UserProfile(uuid.UUID('62c4641b-92e7-4892-a766-fcd68e9eb848'), username)

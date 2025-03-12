@@ -75,7 +75,7 @@ class CasoJsonSchema(Schema):
   autorizaciones_timeouts = fields.Integer(attribute='autorizaciones_timeouts')
   fecha_inicio = fields.String(attribute='fecha_inicio')
   fecha_fin = fields.String(attribute='fecha_fin')
-  duracion_deteccion = fields.String(attribute='duracion_deteccion')
+  duracion_segundos = fields.String(attribute='duracion_segundos')
 
 
 class ExperimentoConsultaJsonSchema(Schema):
