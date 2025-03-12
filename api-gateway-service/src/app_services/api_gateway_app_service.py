@@ -29,7 +29,7 @@ class ApiGatewayAppService:
     try:
       app.logger.debug(f"auth_generate_token - Enviando petición a {self.urls['auth_generar_token']}")
 
-      response = requests.post(self.urls['auth_generar_token'], data=auth_req, timeout=self.client_timeout)
+      response = requests.post(self.urls['auth_generar_token'], json=auth_req, timeout=self.client_timeout)
       app.logger.debug(f"auth_generate_token {self.urls['auth_generar_token']} - Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
       raise InternalServerError from ex
@@ -39,8 +39,8 @@ class ApiGatewayAppService:
 
     return res_data, code
 
-  def send_request_sales_clients(self, auth_header):
-    authenticated = self._validate_token(auth_header)
+  def send_request_sales_customers(self, auth_header):
+    authenticated = self._send_request_auth_validate_token(auth_header)
 
     if not authenticated:
       raise TokenInvalidOrExpired()
@@ -50,10 +50,10 @@ class ApiGatewayAppService:
     }
 
     try:
-      app.logger.debug(f"sales_clients - Enviando petición a {self.urls['ventas_clientes']}")
+      app.logger.debug(f"sales_customers - Enviando petición a {self.urls['ventas_clientes']}")
 
       response = requests.get(self.urls['ventas_clientes'], headers=headers, timeout=self.client_timeout)
-      app.logger.debug(f"sales_clients {self.urls['ventas_clientes']} - Status Code: {response.status_code}, Response: {response.text}")
+      app.logger.debug(f"sales_customers {self.urls['ventas_clientes']} - Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
       raise InternalServerError from ex
 
@@ -63,7 +63,7 @@ class ApiGatewayAppService:
     return res_data, code
 
   def send_request_sales_orders(self, orders_req, auth_header):
-    authenticated = self._validate_token(auth_header)
+    authenticated = self._send_request_auth_validate_token(auth_header)
 
     if not authenticated:
       raise TokenInvalidOrExpired()
@@ -73,10 +73,10 @@ class ApiGatewayAppService:
     }
 
     try:
-      app.logger.debug(f"sales_clients - Enviando petición a {self.urls['ventas_ordenes']}")
+      app.logger.debug(f"sales_orders - Enviando petición a {self.urls['ventas_ordenes']}")
 
-      response = requests.post(self.urls['ventas_ordenes'], data=orders_req, headers=headers, timeout=self.client_timeout)
-      app.logger.debug(f"sales_clients {self.urls['ventas_ordenes']} - Status Code: {response.status_code}, Response: {response.text}")
+      response = requests.post(self.urls['ventas_ordenes'], json=orders_req, headers=headers, timeout=self.client_timeout)
+      app.logger.debug(f"sales_orders {self.urls['ventas_ordenes']} - Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
       raise InternalServerError from ex
 
@@ -85,7 +85,7 @@ class ApiGatewayAppService:
 
     return res_data, code
 
-  def _validate_token(self, auth_header):
+  def _send_request_auth_validate_token(self, auth_header):
     authenticated = False
 
     headers = {
@@ -93,10 +93,10 @@ class ApiGatewayAppService:
     }
 
     try:
-      app.logger.debug(f"_validate_token - Enviando petición a {self.urls['auth_validar_token']}")
+      app.logger.debug(f"auth_validate_token - Enviando petición a {self.urls['auth_validar_token']}")
 
       response = requests.get(self.urls['auth_validar_token'], headers=headers, timeout=self.client_timeout)
-      app.logger.debug(f"_validate_token {self.urls['auth_validar_token']} - Status Code: {response.status_code}, Response: {response.text}")
+      app.logger.debug(f"auth_validate_token {self.urls['auth_validar_token']} - Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
       raise InternalServerError from ex
 

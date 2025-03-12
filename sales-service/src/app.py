@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 import logging
 
 
-from apis.health_bp import health_bp
+from controllers import health_bp, ventas_bp
 from api_messages.base_api_error import ApiError
+from database import db, get_postgresql_url
 
 
 def create_app():
@@ -26,10 +27,32 @@ def create_app():
   # Inicialización de flask-smorest extension y registro de APIs:
   api = Api(app)
   api.register_blueprint(health_bp)
+  api.register_blueprint(ventas_bp)
+
+  # Configuración de base de datos con SQLAlchemy (flask-sqlalchemy).
+  if os.getenv('ENVIRONMENT') in ['test']:
+    database_uri = ''
+    if os.getenv('DB_HOST') in ['memory']:
+      database_uri = 'sqlite:///:memory:'
+    elif os.getenv('DB_HOST') in ['sqlite']:
+      database_uri = 'sqlite:///test.db'
+    else:
+      database_uri = get_postgresql_url()
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+  else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = get_postgresql_url()
+
+  # Inicialización flask-sqlalchemy extension y creación de esquemas de base de datos.
+  db.init_app(app)
+  with app.app_context():
+    db.create_all()
 
   # Inicialización de flask-cors extension.
-  cors = CORS()
-  cors.init_app(app)
+  cors = CORS(app,
+              resources={r"/*": {"origins": "*"}},
+              expose_headers=["Authorization"],
+              supports_credentials=True)
 
   return app
 
@@ -39,10 +62,10 @@ app = create_app()
 
 @app.errorhandler(ApiError)
 def handle_exception(err):
-  app.logger.error(f"{type(err)} - {err}")
+  app.logger.error(f"handle_exception: {type(err)} - {err}")
   if err.__cause__ is not None:
-    app.logger.error(err.__cause__)
+    app.logger.error(f"handle_exception: {type(err.__cause__)} - {err.__cause__}")
 
-  err_json = jsonify(err.__dict__)
+  error_res = jsonify(err.__dict__)
 
-  return err_json, err.code
+  return error_res, err.code

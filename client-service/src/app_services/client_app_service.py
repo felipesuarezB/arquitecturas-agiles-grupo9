@@ -19,7 +19,7 @@ class ClientAppService:
   def __init__(self):
     api_gateway_url = os.environ.get('API_GATEWAY_URL', 'http://localhost:8083')
     self.urls = {
-        'clients': f"{api_gateway_url}/ventas/clientes",
+        'customers': f"{api_gateway_url}/ventas/clientes",
         'orders': f"{api_gateway_url}/ventas/ordenes",
         'authenticate': f"{api_gateway_url}/auth/generar_token"
     }
@@ -41,7 +41,7 @@ class ClientAppService:
         self._process_case(experiment, num_case+1)
 
       experiments_repository.update_experiment_state(experiment, EstadoExperimento.FINALIZADO)
-      app.logger.debug(f"Experimento {experiment['id']} FINALIZADO!")
+      app.logger.debug(f"Experimento {experiment.id} FINALIZADO!")
 
   def _process_case(self, experiment: Experimento, num_case: int):
     case = Caso(id_experimento=experiment.id,
@@ -89,7 +89,7 @@ class ClientAppService:
 
     try:
       app.logger.debug(f"Caso {case.id} - {num_attempt} Enviando petición a {self.urls['authenticate']}")
-      response = requests.get(self.urls['authenticate'], data=credentials_data, timeout=self.client_timeout)
+      response = requests.post(self.urls['authenticate'], json=credentials_data, timeout=self.client_timeout)
       app.logger.debug(f"Caso {case.id} {self.urls['authenticate']} - {num_attempt} Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
       case.autenticaciones_timeouts += 1
@@ -130,7 +130,7 @@ class ClientAppService:
     }
     target_url = ""
     if case.tipo_caso == TipoCaso.CLIENTES.value:
-      target_url = self.urls['clients']
+      target_url = self.urls['customers']
     elif case.tipo_caso == TipoCaso.ORDENES.value:
       target_url = self.urls['orders']
 

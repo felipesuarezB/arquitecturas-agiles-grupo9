@@ -1,0 +1,67 @@
+version: "3"
+
+services:
+  client-service:
+    image: client-service:1.0
+    ports:
+      - 8082:8082
+    environment:
+      FLASK_DEBUG: "1"
+      VERSION: "1.0.0"
+      ENVIRONMENT: "test"
+      DB_HOST: "memory"
+      API_GATEWAY_URL: "http://api-gateway-service:8083"
+      CLIENT_TIMEOUT: "10"
+      CREDENTIALS_USERNAME: "admin"
+      CREDENTIALS_PASSWORD: "12345678"
+      PORT: "8082"
+    networks:
+      - svc_net
+
+  api-gateway-service:
+    image: api-gateway-service:1.0
+    ports:
+      - 8083:8083
+    environment:
+      VERSION: "1.0.0"
+      ENVIRONMENT: "test"
+      DB_HOST: "memory"
+      AUTH_SERVICE_URL: "http://auth-service:8084"
+      SALES_SERVICE_URL: "http://sales-service:8081"
+      CLIENT_TIMEOUT: "10"
+      PORT: "8083"
+    networks:
+      - svc_net
+
+  auth-service:
+    image: auth-service:1.0
+    ports:
+      - 8084:8084
+    environment:
+      VERSION: "1.0.0"
+      ENVIRONMENT: "test"
+      DB_HOST: "memory"
+      JWT_SECRET_KEY: "b1b30826-40cb-49a6-bf6d-d51b89195a6e"
+      CREDENTIALS_USERNAME: "admin"
+      CREDENTIALS_PASSWORD: "12345678"
+      PORT: "8084"
+    networks:
+      - svc_net
+
+  sales-service:
+    image: sales-service:1.0
+    ports:
+      - 8081:8081
+    environment:
+      VERSION: "1.0.0"
+      ENVIRONMENT: "test"
+      DB_HOST: "memory"
+      FAILURE_PROBABILITY: "0.0"
+      MAX_WAIT_TIME: "0"
+      PORT: "8081"
+    networks:
+      - svc_net
+
+networks:
+  svc_net:
+    driver: bridge

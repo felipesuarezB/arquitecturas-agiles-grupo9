@@ -1,7 +1,6 @@
 from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 
 import os
 from dotenv import load_dotenv
@@ -11,6 +10,7 @@ from database import db, get_postgresql_url
 from scheduler import scheduler
 
 from controllers import experimentos_bp, health_bp
+from jobs.client_job import client_job
 from api_messages.base_api_error import ApiError
 from api_messages.api_errors import TokenNotFound, TokenInvalidOrExpired
 
@@ -57,13 +57,6 @@ def create_app():
               expose_headers=["Authorization"],
               supports_credentials=True)
 
-  # Configuración de variables para manejo de tokens JWT (flask-jwt-extended).
-  app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-
-  # Inicialización de flask-jwt-extended extension.
-  jwt = JWTManager()
-  jwt.init_app(app)
-
   # Configuración de flask-apscheduler.
   app.config['SCHEDULER_API_ENABLED'] = False
 
@@ -71,46 +64,18 @@ def create_app():
   scheduler.init_app(app)
   scheduler.start()
 
-  return app, jwt
+  return app
 
 
-app, jwt = create_app()
+app = create_app()
 
 
 @app.errorhandler(ApiError)
 def handle_exception(err):
-  app.logger.error(f"{type(err)} - {err}")
+  app.logger.error(f"handle_exception: {type(err)} - {err}")
   if err.__cause__ is not None:
-    app.logger.error(err.__cause__)
+    app.logger.error(f"handle_exception: {type(err.__cause__)} - {err.__cause__}")
 
-  error_res = jsonify(err.__dict__)
-
-  return error_res, err.code
-
-
-@jwt.unauthorized_loader
-def unauthorized_callback(reason):
-  app.logger.error(f"unauthorized_loader: {reason}")
-
-  err = TokenNotFound()
-  error_res = jsonify(err.__dict__)
-
-  return error_res, err.code
-
-
-@jwt.invalid_token_loader
-def invalid_token_callback(reason):
-  app.logger.error(f"invalid_token_loader: {reason}")
-
-  err = TokenInvalidOrExpired()
-  error_res = jsonify(err.__dict__)
-
-  return error_res, err.code
-
-
-@jwt.expired_token_loader
-def expired_token_callback(jwt_header, jwt_payload):
-  err = TokenInvalidOrExpired()
   error_res = jsonify(err.__dict__)
 
   return error_res, err.code
