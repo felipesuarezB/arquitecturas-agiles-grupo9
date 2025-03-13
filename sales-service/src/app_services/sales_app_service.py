@@ -19,5 +19,7 @@ class SalesAppService:
 
   def create_order(self, new_order_cmd: NewOrderCommandJson):
     order = Order()
-    # orders_repository.create_order(order)
-    pass
+    orders_repository.create_order(order)
+    #evet_log = createLog(order)
+    
+    return OrderCreated(order.id)
