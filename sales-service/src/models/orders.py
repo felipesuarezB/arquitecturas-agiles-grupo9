@@ -11,11 +11,12 @@ class Order:
         self.product = product
         self.value = value
 
+
 class OrderEventLog:
-  # idTabla
-  # idOrder
-  # dateLog
-  pass
+  def __init__(self, id_tabla: uuid.UUID, id_order: uuid.UUID, date_log: datetime):
+        self.id_tabla = id_tabla
+        self.id_order = id_order
+        self.date_log = date_log
 
 
 class NewOrderCommandJson(Schema):
@@ -24,6 +25,10 @@ class NewOrderCommandJson(Schema):
   value = fields.Integer(attribute='value')
   
 class NewEventLogCommandJson(Schema):
-  order_date = fields.String(attribute='order_date')
-  product = fields.Integer(attribute='product')
-  value = fields.Integer(attribute='value')
+  id_order = fields.UUID(attribute='id_order')
+  date_log = fields.DateTime(attribute='date_log')
+
+class OrderEventLogJson(Schema):
+  id_tabla = fields.UUID(attribute='id_tabla')
+  id_order = fields.UUID(attribute='id_order')
+  date_log = fields.DateTime(attribute='date_log')

@@ -14,3 +14,10 @@ class OrderCreated():
   def __init__(self, order_id: str):
     self.message = "Orden creada exitosamente."
     self.order_id = order_id
+
+
+class OrderLogsList:
+  code = 200
+  
+  def __init__(self, logs):
+    self.logs = logs

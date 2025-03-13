@@ -34,3 +34,12 @@ def sales_orders():
   res = jsonify(res_data)
 
   return res, code
+
+
+@api_gateway_bp.route("/ventas/logs", methods=["GET"])
+def sales_logs():
+  auth_header = request.headers['Authorization']
+  res_data, code = api_gateway_app_service.send_request_sales_logs(auth_header)
+  res = jsonify(res_data)
+
+  return res, code
