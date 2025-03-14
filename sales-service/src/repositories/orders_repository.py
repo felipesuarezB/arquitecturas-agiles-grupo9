@@ -15,30 +15,39 @@ class OrdersRepository:
     pass
 
   def create_order(self, date, product, value):
-    new_order = Order(uuid.uuid4(), date, product, value)
+    new_order = Order(id=uuid.uuid4(),
+                      order_date=date,
+                      product=product,
+                      value=value)
+
+    try:
+      db.session.add(new_order)
+      db.session.commit()
+    except Exception as ex:
+      db.session.rollback()
+      raise InternalServerError() from ex
+
     return new_order
 
   def create_order_log(self, order_id):
     new_log = OrderEventLog(
-      id_tabla=uuid.uuid4(),
-      id_order=order_id,
-      date_log=datetime.datetime.now()
-    )
+        id=uuid.uuid4(),
+        id_order=order_id,
+        date_log=datetime.datetime.now())
+
+    try:
+      db.session.add(new_log)
+      db.session.commit()
+    except Exception as ex:
+      db.session.rollback()
+      raise InternalServerError() from ex
+
     return new_log
 
-  def get_order_logs(self):
-    # En un entorno real, aquí se haría una consulta a la base de datos
-    # Por ahora, devolvemos algunos datos simulados para fines de demostración
-    logs = [
-      OrderEventLog(
-        id_tabla=uuid.uuid4(),
-        id_order=uuid.uuid4(),
-        date_log=datetime.datetime.now()
-      ),
-      OrderEventLog(
-        id_tabla=uuid.uuid4(),
-        id_order=uuid.uuid4(),
-        date_log=datetime.datetime.now() - datetime.timedelta(hours=1)
-      )
-    ]
-    return logs
+  def get_order_log(self, order_id):
+    try:
+      log = db.session.query(OrderEventLog).filter(OrderEventLog.id_order == order_id).first()
+    except Exception as ex:
+      raise InternalServerError() from ex
+
+    return log

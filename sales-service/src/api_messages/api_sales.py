@@ -18,6 +18,6 @@ class OrderCreated():
 
 class OrderLogsList:
   code = 200
-  
+
   def __init__(self, logs):
     self.logs = logs
