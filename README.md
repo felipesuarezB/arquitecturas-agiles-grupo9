@@ -11,23 +11,12 @@ Repositorio de implementación de experimentos del curso.
 
 ## Experimentos
 
-Experimento 2: Experimento de mejora de confidencialidad e integridad de microservicio de ventas.
+Experimento 2: Aplicación de tácticas para mejorar confidencialidad e integridad en microservicio de ventas.
 
+- Componente `client-service`: Es el servicio que emula las peticiones del cliente y registra los resultados del experimento.
 - Componente `api-gateway-service`: Es un servicio que emula un API Gateway como único punto de recepción de peticiones del sistema. Delega generación y validación del Token en `auth-service`.
-- Componente `auth-service`: Servicio encargado de verificar la identidad de los usuarios mediante credenciales en texto (usuario y password). 
-- Componente `client-service`: Es el servicio que emula las peticiones del cliente y registra los resultados del experimento
+- Componente `auth-service`: Servicio encargado de verificar la identidad de los usuarios mediante credenciales en texto (usuario y password).
 - Componente `sales-service`: Es el microservicio que expone operaciones y datos críticos y se protege mediante el `api-gateway-service`.
-
-## Estructura
-
-```txt
-  /
-    ├── api-gateway-service # Implementación componente monitor.
-    ├── auth-service # Implementación componente autenticación y autorización.
-    ├── client-service # Implementación componente microservicio de ventas (servicio monitoreado).
-    ├── sales-service # Implementación componente microservicio de ventas (servicio monitoreado).
-    └── Pipfile # Archivo de declaración de dependencias del proyecto.
-```
 
 Experimento 1: Aplicación de tácticas de arquitectura para mejorar la disponibilidad.
 
@@ -38,14 +27,17 @@ Experimento 1: Aplicación de tácticas de arquitectura para mejorar la disponib
 
 ```txt
   /
-    ├── monitor-service # Implementación componente monitor.
-    ├── sales-service # Implementación componente microservicio de ventas (servicio monitoreado).
+    ├── api-gateway-service # Implementación API Gateway del sistema.
+    ├── auth-service # Implementación componente autenticación y autorización.
+    ├── client-service # Implementación componente de ejecución de experimento 2.
+    ├── sales-service # Implementación componente microservicio de ventas, servicio monitoreado y protegido por API Gateway.
+    ├── monitor-service # Implementación componente monitor y ejecución de experimento 1.
     └── Pipfile # Archivo de declaración de dependencias del proyecto.
 ```
 
 ## Despliegue
 
-Se despliegan los componentes del experimento en Heroku según la instrucciones de cada README de cada componente.
+Se despliegan los componentes del experimento en ambiente Heroku para experimento 1 y ambiente local para experimento 2 según la instrucciones de cada README de cada componente.
 
 ## Autores
 
