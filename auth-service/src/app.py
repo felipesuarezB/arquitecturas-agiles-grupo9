@@ -1,22 +1,24 @@
 from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 import os
 from dotenv import load_dotenv
 import logging
 
-
-from controllers import health_bp, ventas_bp
-from api_messages.base_api_error import ApiError
 from database import db, get_postgresql_url
+
+from controllers import health_bp, auth_bp
+from api_messages.base_api_error import ApiError
+from api_messages.api_errors import TokenNotFound, TokenInvalidOrExpired
 
 
 def create_app():
   app = Flask(__name__)
 
   # Configuración de endpoints OpenAPI y Swagger (flask-smorest).
-  app.config['API_TITLE'] = 'API Sales Service'
+  app.config['API_TITLE'] = 'API Auth Service'
   app.config['API_VERSION'] = '1.0.0'
   app.config['OPENAPI_VERSION'] = "3.0.2"
   app.config['OPENAPI_JSON_PATH'] = "api-spec.json"
@@ -27,7 +29,7 @@ def create_app():
   # Inicialización de flask-smorest extension y registro de APIs:
   api = Api(app)
   api.register_blueprint(health_bp)
-  api.register_blueprint(ventas_bp)
+  api.register_blueprint(auth_bp)
 
   # Configuración de base de datos con SQLAlchemy (flask-sqlalchemy).
   if os.getenv('ENVIRONMENT') in ['test']:
@@ -54,10 +56,17 @@ def create_app():
               expose_headers=["Authorization"],
               supports_credentials=True)
 
-  return app
+  # Configuración de variables para manejo de tokens JWT (flask-jwt-extended).
+  app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+
+  # Inicialización de flask-jwt-extended extension.
+  jwt = JWTManager()
+  jwt.init_app(app)
+
+  return app, jwt
 
 
-app = create_app()
+app, jwt = create_app()
 
 
 @app.errorhandler(ApiError)
@@ -66,6 +75,36 @@ def handle_exception(err):
   if err.__cause__ is not None:
     app.logger.error(f"handle_exception: {type(err.__cause__)} - {err.__cause__}")
 
+  error_res = jsonify(err.__dict__)
+
+  return error_res, err.code
+
+
+@jwt.unauthorized_loader
+def unauthorized_callback(reason):
+  app.logger.error(f"unauthorized_loader: {reason}")
+
+  err = TokenNotFound()
+  error_res = jsonify(err.__dict__)
+
+  return error_res, err.code
+
+
+@jwt.invalid_token_loader
+def invalid_token_callback(reason):
+  app.logger.error(f"invalid_token_loader: {reason}")
+
+  err = TokenInvalidOrExpired()
+  error_res = jsonify(err.__dict__)
+
+  return error_res, err.code
+
+
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+  app.logger.error(f"expired_token_callback: {jwt_payload}")
+
+  err = TokenInvalidOrExpired()
   error_res = jsonify(err.__dict__)
 
   return error_res, err.code

@@ -1,6 +1,6 @@
 from flask import jsonify
 from flask_smorest import Blueprint
-from services.health_service import health_service
+from app_services import health_app_service
 
 
 health_bp = Blueprint(name='health', import_name=__name__, url_prefix='/health', description="API de Health Check.")
@@ -8,7 +8,7 @@ health_bp = Blueprint(name='health', import_name=__name__, url_prefix='/health',
 
 @health_bp.route('/ping', methods=['GET'])
 def ping():
-  result = health_service.get_health_check()
-  res_json = jsonify(result.__dict__)
+  result = health_app_service.get_health_check()
+  res = jsonify(result.__dict__)
 
-  return res_json, result.code
+  return res, result.code
