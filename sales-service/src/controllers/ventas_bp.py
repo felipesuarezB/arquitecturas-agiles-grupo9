@@ -23,3 +23,11 @@ def create_order(new_order_cmd):
   res = jsonify(result.__dict__)
 
   return res, result.code
+
+
+@ventas_bp.route('/ordenes/logs/<string:id>', methods=['GET'])
+def get_order_logs(id):
+  result = sales_app_service.get_order_log(id)
+  res = jsonify(result.__dict__)
+
+  return res, result.code

@@ -19,9 +19,10 @@ class ClientAppService:
   def __init__(self):
     api_gateway_url = os.environ.get('API_GATEWAY_URL', 'http://localhost:8083')
     self.urls = {
+        'authenticate': f"{api_gateway_url}/auth/generar_token",
         'customers': f"{api_gateway_url}/ventas/clientes",
         'orders': f"{api_gateway_url}/ventas/ordenes",
-        'authenticate': f"{api_gateway_url}/auth/generar_token"
+        'logs': f"{api_gateway_url}/ventas/ordenes/logs",
     }
 
     client_timeout = os.environ.get('CLIENT_TIMEOUT', 5)
@@ -48,10 +49,6 @@ class ClientAppService:
                 numero=num_case,
                 tipo_caso=experiment.tipo_caso,
                 intentos=0,
-                autenticaciones_exitosas=0,
-                autenticaciones_fallidas=0,
-                autorizaciones_exitosas=0,
-                autorizaciones_fallidas=0,
                 fecha_inicio=datetime.today())
     experiments_repository.create_case(case)
 
@@ -61,7 +58,10 @@ class ClientAppService:
 
     for num_attempt in range(1, experiment.max_intentos+1):
       app.logger.debug(f"Caso {case.id} Intento {num_attempt}")
-      self._request_attempt(case, num_attempt)
+      if experiment.tipo_caso == TipoCaso.CLIENTES.value:
+        self._request_attempt_case_1(case, num_attempt)
+      elif experiment.tipo_caso == TipoCaso.ORDENES.value:
+        self._request_attempt_case_2(case, num_attempt)
 
     end_time = time.time()
     duration = end_time - start_time
@@ -73,15 +73,15 @@ class ClientAppService:
     experiments_repository.update_case(case)
     app.logger.debug(f"Caso {case.id} FINALIZADO!")
 
-  def _request_attempt(self, case: Caso, num_attempt: int):
+  def _request_attempt_case_1(self, case: Caso, num_attempt: int):
     case.intentos = num_attempt
 
-    _, token = self._request_authentication_attempt(case, num_attempt)
-    self._request_authorization_attempt(case, num_attempt, token)
+    _, token = self._send_auth_request(case, num_attempt)
+    self._send_customers_request(case, num_attempt, token)
 
     experiments_repository.update_case(case)
 
-  def _request_authentication_attempt(self, case: Caso, num_attempt: int):
+  def _send_auth_request(self, case: Caso, num_attempt: int):
     authenticated = False
     token = ""
 
@@ -92,16 +92,16 @@ class ClientAppService:
       response = requests.post(self.urls['authenticate'], json=credentials_data, timeout=self.client_timeout)
       app.logger.debug(f"Caso {case.id} {self.urls['authenticate']} - {num_attempt} Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
-      case.autenticaciones_timeouts += 1
+      case.peticion_auth_timeouts += 1
       return authenticated, token
 
     if response.status_code == 200:
-      case.autenticaciones_exitosas += 1
+      case.peticion_auth_exitosas += 1
       authenticated = True
       res_json = response.json()
       token = res_json['token']
     else:
-      case.autenticaciones_fallidas += 1
+      case.peticion_auth_fallidas += 1
       authenticated = False
       token = ""
 
@@ -123,36 +123,91 @@ class ClientAppService:
 
     return data
 
-  def _request_authorization_attempt(self, case: Caso, num_attempt: int, token: str):
+  def _send_customers_request(self, case: Caso, num_attempt: int, token: str):
     success = False
     headers = {
         'Authorization': f"Bearer {token}"
     }
-    target_url = ""
-    if case.tipo_caso == TipoCaso.CLIENTES.value:
-      target_url = self.urls['customers']
-    elif case.tipo_caso == TipoCaso.ORDENES.value:
-      target_url = self.urls['orders']
 
     try:
-      app.logger.debug(f"Caso {case.id} - {num_attempt} Enviando petición a {target_url}")
-
-      response = None
-      if case.tipo_caso == TipoCaso.CLIENTES.value:
-        response = requests.get(target_url, headers=headers, timeout=self.client_timeout)
-      elif case.tipo_caso == TipoCaso.ORDENES.value:
-        response = requests.post(target_url, headers=headers, timeout=self.client_timeout)
-
-      app.logger.debug(f"Caso {case.id} {target_url} - {num_attempt} Status Code: {response.status_code}, Response: {response.text}")
+      app.logger.debug(f"Caso {case.id} - {num_attempt} Enviando petición a {self.urls['customers']}")
+      response = requests.get(self.urls['customers'], headers=headers, timeout=self.client_timeout)
+      app.logger.debug(f"Caso {case.id} {self.urls['customers']} - {num_attempt} Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
-      case.autorizaciones_timeouts += 1
+      case.peticion_clientes_timeouts += 1
       return success
 
     if response.status_code == 200:
-      case.autorizaciones_exitosas += 1
+      case.peticion_clientes_exitosas += 1
       success = True
     else:
-      case.autorizaciones_fallidas += 1
+      case.peticion_clientes_fallidas += 1
+      success = False
+
+    return success
+
+  def _request_attempt_case_2(self, case: Caso, num_attempt: int):
+    case.intentos = num_attempt
+
+    _, token = self._send_auth_request(case, num_attempt)
+    _, order_id = self._send_orders_request(case, num_attempt, token)
+    _, self._send_logs_request(case, num_attempt, token, order_id)
+
+    experiments_repository.update_case(case)
+
+  def _send_orders_request(self, case: Caso, num_attempt: int, token: str):
+    success = False
+    order_id = ""
+
+    headers = {
+        'Authorization': f"Bearer {token}"
+    }
+    req = {
+        "order_date": "2025-03-13T19:00:00",
+        "product": 1,
+        "value": 100
+    }
+
+    try:
+      app.logger.debug(f"Caso {case.id} - {num_attempt} Enviando petición a {self.urls['orders']}")
+      response = requests.post(self.urls['orders'], json=req, headers=headers, timeout=self.client_timeout)
+      app.logger.debug(f"Caso {case.id} {self.urls['orders']} - {num_attempt} Status Code: {response.status_code}, Response: {response.text}")
+    except requests.RequestException as ex:
+      case.peticion_ordenes_timeouts += 1
+      return success, order_id
+
+    if response.status_code == 200:
+      case.peticion_ordenes_exitosas += 1
+      success = True
+      res_json = response.json()
+      order_id = res_json['order_id']
+    else:
+      case.peticion_ordenes_fallidas += 1
+      success = False
+
+    return success, order_id
+
+  def _send_logs_request(self, case: Caso, num_attempt: int, token: str, order_id: str):
+    success = False
+
+    headers = {
+        'Authorization': f"Bearer {token}"
+    }
+
+    try:
+      target_url = f"{self.urls['logs']}/{order_id}"
+      app.logger.debug(f"Caso {case.id} - {num_attempt} Enviando petición a {target_url}")
+      response = requests.get(target_url, headers=headers, timeout=self.client_timeout)
+      app.logger.debug(f"Caso {case.id} {target_url} - {num_attempt} Status Code: {response.status_code}, Response: {response.text}")
+    except requests.RequestException as ex:
+      case.peticion_logs_timeouts += 1
+      return success
+
+    if response.status_code == 200:
+      case.peticion_logs_exitosas += 1
+      success = True
+    else:
+      case.peticion_logs_fallidas += 1
       success = False
 
     return success

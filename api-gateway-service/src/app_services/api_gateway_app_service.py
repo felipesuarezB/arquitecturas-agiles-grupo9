@@ -18,6 +18,7 @@ class ApiGatewayAppService:
     self.urls = {
         'ventas_clientes': f"{sales_service_url}/ventas/clientes",
         'ventas_ordenes': f"{sales_service_url}/ventas/ordenes",
+        'ventas_logs': f"{sales_service_url}/ventas/ordenes/logs",
         'auth_generar_token': f"{auth_service_url}/auth/generar_token",
         'auth_validar_token': f"{auth_service_url}/auth/validar_token"
     }
@@ -77,6 +78,30 @@ class ApiGatewayAppService:
 
       response = requests.post(self.urls['ventas_ordenes'], json=orders_req, headers=headers, timeout=self.client_timeout)
       app.logger.debug(f"sales_orders {self.urls['ventas_ordenes']} - Status Code: {response.status_code}, Response: {response.text}")
+    except requests.RequestException as ex:
+      raise InternalServerError from ex
+
+    res_data = response.json()
+    code = response.status_code
+
+    return res_data, code
+
+  def send_request_sales_logs(self, id, auth_header):
+    authenticated = self._send_request_auth_validate_token(auth_header)
+
+    if not authenticated:
+      raise TokenInvalidOrExpired()
+
+    headers = {
+        'Authorization': auth_header
+    }
+
+    try:
+      target_url = f"{self.urls['ventas_logs']}/{id}"
+      app.logger.debug(f"sales_logs - Enviando petición a {target_url}")
+
+      response = requests.get(target_url, headers=headers, timeout=self.client_timeout)
+      app.logger.debug(f"sales_logs {target_url} - Status Code: {response.status_code}, Response: {response.text}")
     except requests.RequestException as ex:
       raise InternalServerError from ex
 
